@@ -26,24 +26,43 @@ app.listen(PORT, () => {
 app.get("/", (req, res) => {
   res.send("Edu Villa API");
 });
-app.post("/add-chapters", async (req, res) => {
+app.post("/chapters", async (req, res) => {
   try {
-    const { id, title, description, content } = req.body;
-    if (!(id && title && description && content))
-      res.status(400).send({ message: "All fields are required." });
-    let chapterId = uuidv4();
+    const { course_id, title, description, content } = req.body;
+    const id = uuidv4();
+    if (course_id && title && description && content) {
+      await pool.query(
+        "Insert into chapters (course_id, id, title, description, content) values($1, $2, $3, $4, $5)",
+        [course_id, id, title, description, content]
+      );
+      res.status(200).send({
+        message: `${title} Added Successfully`,
+        data: { ...req.body, id },
+      });
+    } else res.status(400).send({ message: "All fields are required." });
+  } catch (err) {
+    console.log(err.message);
+  }
+});
+app.delete("/chapters", async (req, res) => {
+  try {
+    const { chapter_id } = req.query;
+    if (!chapter_id)
+      res.status(400).send({ message: "Please provide chapter_id." });
     const { rows } = await pool.query(
-      "SELECT chapters FROM  courses where id=$1",
-      [id]
+      `Select title from chapters where id=$1`,
+      [chapter_id]
     );
-    let prevData = JSON.parse(rows[0].chapters);
-    let dataObj = [{ id: chapterId, title, description, content }];
-    await pool.query("UPDATE courses SET chapters = $1 WHERE id = $2", [
-      JSON.stringify(rows[0].chapters ? prevData.concat(dataObj) : dataObj),
-      id,
-    ]);
-    console.log(JSON.parse(rows[0].chapters));
-    res.status(200).send({ message: "Chapter Added Successfully" });
+
+    await pool.query(
+      `DELETE FROM chapters
+      WHERE id = $1`,
+      [chapter_id]
+    );
+
+    res.status(200).send({
+      message: `${rows[0].title} Deleted Successfully`,
+    });
   } catch (err) {
     console.log(err.message);
   }
