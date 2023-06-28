@@ -111,6 +111,7 @@ app.get("/courses", async (req, res) => {
             'course_id', course_id,
     'chapter_description', description,
     'chapter_content', content
+    'chapter_title', title
         )) from chapters where course_id=$1) as chapters from courses  where id=$1`,
           [id]
         )
