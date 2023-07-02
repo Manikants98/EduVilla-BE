@@ -11,12 +11,11 @@ export const courses = async (req, res) => {
               'course_id', course_id,
               'chapter_description', description,
               'chapter_content', content,
-              'chapter_title', title )) from chapters where course_id=$1) as chapters from courses  where id=$1`,
+              'chapter_title', title )) from chapters where course_id=$1) as chapters from courses where id=$1`,
           [id]
         )
       : await pool.query("SELECT * FROM  courses");
     res.json(rows);
-    console.log(req.query.id);
   } catch (err) {
     console.log(err.message);
   }
