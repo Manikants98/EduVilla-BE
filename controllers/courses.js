@@ -9,8 +9,23 @@ export const courses = async (req, res) => {
         where: { id },
         include: { chapters: true },
       });
-      // Match previous array response shape
-      res.json(course ? [course] : []);
+      // Match previous array response shape and chapter key aliases
+      if (!course) return res.json([]);
+      const mapped = {
+        id: course.id,
+        heading: course.heading,
+        description: course.description,
+        image_url: course.image_url,
+        category: course.category,
+        chapters: (course.chapters || []).map((c) => ({
+          chapter_id: c.id,
+          course_id: c.course_id,
+          chapter_description: c.description,
+          chapter_content: c.content,
+          chapter_title: c.title,
+        })),
+      };
+      res.json([mapped]);
     } else {
       const courses = await prisma.course.findMany();
       res.json(courses);
