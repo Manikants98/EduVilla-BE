@@ -53,6 +53,7 @@ model Comment {
   chapter_id String  @db.Uuid
   name       String
   comment    String
+  created_at DateTime @default(now())
   course     Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
   chapter    Chapter @relation(fields: [chapter_id], references: [id], onDelete: Cascade)
 

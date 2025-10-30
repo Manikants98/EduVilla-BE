@@ -20,7 +20,15 @@ export const comments = async (req, res) => {
   try {
     const id = req.query.chapter_id;
     const rows = await prisma.comment.findMany({ where: { chapter_id: id } });
-    res.send(rows);
+    const mapped = rows.map((r) => ({
+      id: r.id,
+      course_id: r.course_id,
+      chapter_id: r.chapter_id,
+      name: r.name,
+      comment: r.comment,
+      date: (r.created_at ?? new Date()).toISOString(),
+    }));
+    res.send(mapped);
   } catch (err) {
     console.error(err);
     res
