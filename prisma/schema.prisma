@@ -1,0 +1,63 @@
+// Prisma schema for EduVilla
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
+}
+
+model User {
+  id          String   @id @db.Uuid
+  email       String   @unique
+  name        String
+  password    String
+  role        String   @default("USER")
+  gender      String?
+  dob         DateTime? @db.Date
+  city        String?
+  state       String?
+  zipcode     String?
+  country     String?
+  phone       String?
+  profile_url String?
+}
+
+model Course {
+  id          String    @id @db.Uuid
+  heading     String
+  description String?
+  image_url   String?
+  category    String?
+  chapters    Chapter[]
+  comments    Comment[]
+}
+
+model Chapter {
+  id          String    @id @db.Uuid
+  course_id   String
+  title       String
+  description String?
+  content     String?
+  course      Course    @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  comments    Comment[]
+
+  @@index([course_id], name: "idx_chapters_course_id")
+}
+
+model Comment {
+  id         String  @id @db.Uuid
+  course_id  String
+  chapter_id String
+  name       String
+  comment    String
+  course     Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  chapter    Chapter @relation(fields: [chapter_id], references: [id], onDelete: Cascade)
+
+  @@index([course_id], name: "idx_comments_course_id")
+  @@index([chapter_id], name: "idx_comments_chapter_id")
+}
+
+

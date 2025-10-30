@@ -1,18 +1,46 @@
-import pool from "../db.js";
+import prisma from "../db.js";
 import jwt_decode from "jwt-decode";
 
 export const users = async (req, res) => {
   try {
     const id = req.query.id;
-    const { rows } = id
-      ? await pool.query(
-          "SELECT id, email, name, gender, dob, city, state, zipcode, country,phone,profile_url FROM  users where id=$1",
-          [id]
-        )
-      : await pool.query(
-          "SELECT id, email, name, gender, dob, city, state, zipcode, country,phone,password,profile_url FROM users"
-        );
-    res.json(rows);
+    if (id) {
+      const user = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          gender: true,
+          dob: true,
+          city: true,
+          state: true,
+          zipcode: true,
+          country: true,
+          phone: true,
+          profile_url: true,
+        },
+      });
+      res.json(user ? [user] : []);
+    } else {
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          gender: true,
+          dob: true,
+          city: true,
+          state: true,
+          zipcode: true,
+          country: true,
+          phone: true,
+          password: true,
+          profile_url: true,
+        },
+      });
+      res.json(users);
+    }
   } catch (err) {
     console.log(err.message);
   }
@@ -33,12 +61,24 @@ export const user = async (req, res) => {
 
     console.log(jwt_decode(token));
 
-    const { rows } = await pool.query(
-      "SELECT id, email, name, gender, dob, city, state, zipcode, country,phone,profile_url,role FROM  users where id=$1",
-      [id]
-    );
-
-    res.json(rows);
+    const userData = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        gender: true,
+        dob: true,
+        city: true,
+        state: true,
+        zipcode: true,
+        country: true,
+        phone: true,
+        profile_url: true,
+        role: true,
+      },
+    });
+    res.json(userData ? [userData] : []);
   } catch (err) {
     console.log(err.message);
   }
@@ -59,39 +99,57 @@ export const updateProfile = async (req, res) => {
       profile_url,
     } = req.body;
 
-    const { rows } = await pool.query(
-      "SELECT  email, name, gender, dob, city, state, zipcode, country,phone FROM  users WHERE  id=$1",
-      [id]
-    );
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        email: true,
+        name: true,
+        gender: true,
+        dob: true,
+        city: true,
+        state: true,
+        zipcode: true,
+        country: true,
+        phone: true,
+        profile_url: true,
+      },
+    });
 
-    if (rows.length !== 0) {
-      const data = await pool.query(
-        "UPDATE users SET email=$1,name=$2,gender=$3,dob=$4,city=$5,state=$6,zipcode=$7,country=$8,phone=$9,profile_url=$10 WHERE id=$11",
-        [
-          email || rows[0].email,
-          name || rows[0].name,
-          gender || rows[0].gender,
-          dob || rows[0].dob,
-          city || rows[0].city,
-          state || rows[0].state,
-          zipcode || rows[0].zipcode,
-          country || rows[0].country,
-          phone || rows[0].phone,
-          profile_url || rows[0].profile_url,
-          id,
-        ]
-      );
+    if (existing) {
+      await prisma.user.update({
+        where: { id },
+        data: {
+          email: email ?? existing.email,
+          name: name ?? existing.name,
+          gender: gender ?? existing.gender,
+          dob: dob ?? existing.dob,
+          city: city ?? existing.city,
+          state: state ?? existing.state,
+          zipcode: zipcode ?? existing.zipcode,
+          country: country ?? existing.country,
+          phone: phone ?? existing.phone,
+          profile_url: profile_url ?? existing.profile_url,
+        },
+      });
 
-      if (data) {
-        const { rows } = await pool.query(
-          "SELECT id, email, name, gender, dob, city, state, zipcode, country,phone,profile_url  FROM users WHERE id=$1",
-          [id]
-        );
-        res.json(rows);
-      }
+      const updated = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          gender: true,
+          dob: true,
+          city: true,
+          state: true,
+          zipcode: true,
+          country: true,
+          phone: true,
+          profile_url: true,
+        },
+      });
+      res.json(updated ? [updated] : []);
     }
-
-    console.log(data);
   } catch (err) {
     console.log(err.message);
   }
