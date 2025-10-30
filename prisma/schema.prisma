@@ -37,7 +37,7 @@ model Course {
 
 model Chapter {
   id          String    @id @db.Uuid
-  course_id   String
+  course_id   String    @db.Uuid
   title       String
   description String?
   content     String?
@@ -49,8 +49,8 @@ model Chapter {
 
 model Comment {
   id         String  @id @db.Uuid
-  course_id  String
-  chapter_id String
+  course_id  String  @db.Uuid
+  chapter_id String  @db.Uuid
   name       String
   comment    String
   course     Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
